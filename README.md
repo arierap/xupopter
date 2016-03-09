@@ -1,4 +1,8 @@
 # Xupopter 
+
+[![Build Status](https://travis-ci.org/tetreum/xupopter.svg?branch=master)](https://travis-ci.org/tetreum/xupopter)
+[![License](https://poser.pugx.org/tetreum/xupopter/license.svg)](https://packagist.org/packages/tetreum/xupopter)
+
 Xupopter crawlea las páginas más conocidas de compraventa y alquiler de pisos de España.
 
 Listado de Providers que crawlea:
