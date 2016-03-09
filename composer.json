@@ -1,0 +1,16 @@
+
+{
+    "name": "tetreum/xupopter",
+    "description": "Xupopter crawlea las principales páginas de compraventa de inmuebles de España como son Idealista, Fotocasa, Habitaclia, Pisos.com",
+    "keywords": ["crawler","idealista","habitaclia","fotocasa","pisos.com"],
+    "license": "MIT",
+    "require-dev": {
+        "phpunit/phpunit": "4.5.*"
+    },
+    "require": {
+        "querypath/QueryPath": ">=3.0.0"
+    },
+    "autoload": {
+        "psr-4": {"Xupopter\\": "App"}
+    }
+}
