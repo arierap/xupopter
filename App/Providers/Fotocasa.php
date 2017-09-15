@@ -12,21 +12,31 @@ class Fotocasa extends Provider implements IProvider
     {
         $q = $this->getContent($this->domain . $path);
 
-        foreach ($q->find('#search-listing tr.expanded') as $data)
+        foreach ($q->find('script') as $data)
         {
-            $item = $this->parseItem($this->getContent($data->attr("data-url")));
+            $json = $data->text();
+            if (strpos($json, "__INITIAL_PROPS__") === false) {
+                continue;
+            }
+            $json = str_replace('window.__INITIAL_PROPS__=', "", $json);
+            $json = json_decode($json)->initialSearch->result->realEstates;
 
-            if ($item) {
-                $this->sendToDB($item);
+            foreach ($json as $house) {
+                $item = $this->parseItem($house);
+
+                if ($item) {
+                    $this->sendToDB($item);
+                }
             }
         }
     }
 
 
+
 	/**
      * Converts provider output to db's input format
      *
-     * @param QueryPath $html
+     * @param object $json
      *
      * @return mixed (array/boolean)
      */
@@ -38,37 +48,33 @@ class Fotocasa extends Provider implements IProvider
             transform http://a.ftcs.es/inmesp/anuncio/2015/04/03/135151707/253141017.jpg/w_0/c_690x518/p_1/
             to        http://a.ftcs.es/inmesp/anuncio/2015/04/03/135151707/253141017.jpg
         */
-    	foreach ($html->find('#containerSlider img') as $img)
+    	foreach ($json->multimedia as $img)
         {
-    		$src = $img->attr("data-src");
+            if ($img->type != 'image') {continue;}
+            $src = $img->src;
 
-    		if (empty($src)) {
-    			$src = $img->attr("src");
-    		}
+            $path = explode(".jpg", $src);
+            $images[] = $path[0] . ".jpg";
+        }
 
-    		$path = explode(".jpg", $src);
-    		$images[] = $path[0] . ".jpg";
-    	}
+        $features = [];
+        foreach ($json->features as $feature) {
+            $features[$feature->key] = $feature->value;
+        }
 
-    	$data = [
-    		'title' => trim($html->find('.property-title')->text()),
-    		'description' => trim($html->find('#ctl00_ddDescription .detail-section-content')->text()),
-    		'images' => $images,
-    		'location' => trim($html->find('.section.section--noBorder .detail-section-content')->text()),
-    		'price' => $this->strToNumber($html->find('#priceContainer')->text()),
-    		'meters' => $this->strToNumber($html->find('#litSurface b')->text()),
-    		'floor' => (int)$html->find('#litFloor')->text(),
-    		'url' => $html->find('link[rel="canonical"]')->attr("href")
-    	];
+        $data = [
+            'title' => $json->buildingType . "-". $json->id,
+            'description' => $json->description,
+            'images' => $images,
+            'location' => $json->location,
+            'price' => (double)$json->price,
+            'meters' => (double)$features['surface'],
+            'url' => $this->domain . "/es/" . $json->detail->{'es-ES'}
+        ];
 
-    	foreach ($html->find('.detail-extras li') as $li) {
-    		$text = trim($li->text());
-    		switch ($text) {
-    			case "Ascensor":
-    				$data["elevator"] = true;
-    			break;
-    		}
-    	}
+        if ($features['rooms']) {
+            $data['rooms'] = $features['rooms'];
+        }
 
     	if ($data["meters"] == 0 || empty($data["description"])) {
     		return false;
