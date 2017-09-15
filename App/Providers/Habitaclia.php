@@ -49,18 +49,22 @@ class Habitaclia extends Provider implements IProvider
         if (!empty($html->find('.cajon-pedir-foto')->text()) || !empty($html->find('.pvpdesde')->text())) {
             return false;
         }
+        
+        // ad removed/banned
+        if (sizeof($html->find('.listainmueblesleft .listainmuebles:first-child img')) > 0) {
+            return false;
+        }
 
-        $location = trim(preg_replace('/(\v|\s)+/', ' ', $html->find('.dir_ex.sprite')->text()));
-        $description = trim($html->find('[itemprop="description"] p')->text());
+        $description = trim($html->find('#js-detail-description')->text());
 
         $data = [
-            'title' => $html->find('.h1ficha')->text(),
-            'location' => $location,
+            'title' => $html->find('.summary-left h1')->text(),
+            'location' => trim($html->find('article.location a')->text()),
             'description' => $description,
             'url' => $html->find('link[rel="canonical"]')->attr("href"),
             "price" => $this->strToNumber($html->find('[itemprop="price"]')->text())
         ];
-
+        
         $lastUpdate = trim($html->find('.actualizado.radius')->text());
 
         preg_match("/\(([0-9\/]+)\)/", $lastUpdate, $matches);
@@ -68,13 +72,13 @@ class Habitaclia extends Provider implements IProvider
             $data["lastUpdate"] = $matches[1];
         }
 
-        foreach ($html->find('#inificha .bodis ul li') as $li)
+        foreach ($html->find('#js-feature-container .feature-container li') as $li)
         {
             $text = $li->text();
 
             if (strpos($text, " m2") !== false) {
-                $data["meters"] = $this->strToNumber($li->find("span")->text());
-            } else if (strpos($text, "habitaciones") !== false) {
+                $data["meters"] = $this->strToNumber($li->find("strong")->text());
+            } else if (strpos($text, "habitaciones") !== false || strpos($text, "hab.") !== false) {
                 $data["rooms"] = (int)$text;
             }
         }
