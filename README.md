@@ -1,3 +1,5 @@
+Edit: Ya me he comprado una casa, así que no lo mantengo.
+
 # Xupopter 
 
 [![Build Status](https://travis-ci.org/tetreum/xupopter.svg?branch=master)](https://travis-ci.org/tetreum/xupopter)
